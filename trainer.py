@@ -1,4 +1,4 @@
-# trainer1.py
+# trainer.py
 
 import argparse
 import logging
@@ -36,12 +36,6 @@ def calc_loss(outputs, low_res_label_batch, label_batch, ce_loss, dice_loss, dic
 
     low_res_logits = outputs['low_res_logits']
     mask_224 = outputs['masks']
-    # assert low_res_logits.requires_grad, "low_res_logits does not require gradients!"
-
-    # print(low_res_label_batch.min(), low_res_label_batch.max(), torch.unique(low_res_label_batch))
-
-    # print('low_res_label_batch[:].long()', low_res_label_batch[:].long().shape)
-    # print('low_res_logits', low_res_logits.shape)
 
     # 低纬度 的 loss （ dim=56 ）
     loss_ce1 = ce_loss(low_res_logits, low_res_label_batch[:].long())
@@ -144,8 +138,7 @@ def initialize_dataloader(args):
         RandomGenerator([224, 224], [56, 56])
     ])
 
-    print('Use New Picture Enhancement')
-
+    print('Use Picture Enhancement')
     dataset = Synapse_dataset(
         base_dir=base_dir,
         list_dir=list_dir,
@@ -192,12 +185,7 @@ def trainer_synapse(args, model, snapshot_path, multimask_output, low_res):
     setup_logging(snapshot_path)
     logging.info(f"Training started with arguments: {args}")
 
-    print('guide_0.1')
-
     dataloader = initialize_dataloader(args)
-
-    # if args.n_gpu > 1:
-    #     model = nn.DataParallel(model)
 
     model = model.cuda()
     model.train()
@@ -205,10 +193,6 @@ def trainer_synapse(args, model, snapshot_path, multimask_output, low_res):
     for param in model.GuideMatrixGenerator.sam_model.mask_decoder.parameters():
         param.requires_grad = True
 
-    # for param in model.GuideMatrixGenerator.sam_model.mask_decoder2.parameters():
-    #     param.requires_grad = True
-
-    # Inside trainer_synapse() after model.train()
     # for name, param in model.named_parameters():
     #     if param.requires_grad:
     #         logging.info(f"Trainable: {name}")
@@ -244,7 +228,6 @@ def trainer_synapse(args, model, snapshot_path, multimask_output, low_res):
     iter_num = 0
     max_iterations = args.max_epochs * len(dataloader)
     logging.info(f"{len(dataloader)} iterations per epoch. {max_iterations} max iterations.")
-    best_performance = 0.0
 
     # Initialize progress bar
     epoch_iterator = tqdm(range(args.max_epochs), desc="Epoch", ncols=70)
@@ -256,52 +239,16 @@ def trainer_synapse(args, model, snapshot_path, multimask_output, low_res):
             text_batch = sampled_batch['text']
             low_res_label_batch = sampled_batch['low_res_label'].cuda()
 
-            # -----------------------------------------------------------------------------------------------
-            # 加入噪声
-            # image_transform = image_batch.cpu()
-            # trans = transforms.Compose([
-            #     transforms.ToPILImage(),
-            #     AddGaussianNoise(mean=random.uniform(0.5, 1.5), variance=0.5, amplitude=random.uniform(0, 45), p=0.5),
-            #     AddPepperNoise(0.7, 0.9),
-            #     transforms.ToTensor(),
-            # ])
-            # img_list = []
-            #
-            # for i in range(image_transform.shape[0]):
-            #     img = image_transform[i]
-            #     img = trans(img)
-            #     img_list.append(img)
-            #
-            # image_transform = torch.stack(img_list, dim=0).cuda()
-
-            # -----------------------------------------------------------------------------------------------
-
             assert image_batch.max() <= 3, f'image_batch max: {image_batch.max()}'
-
-            # outputs = model(image_batch, text_batch, multimask_output, args.img_size, gt = low_res_label_batch)
-            # loss, loss_ce, loss_dice = calc_loss(outputs, low_res_label_batch, ce_loss, dice_loss, args.dice_param)
-
-            # outputs1, outputs2, attn1, attn1 = model(image_batch, text_batch, multimask_output, args.img_size, gt=low_res_label_batch)
 
             outputs1 = model(image_batch, text_batch, multimask_output, args.img_size, gt=low_res_label_batch)
 
             assert outputs1['low_res_logits'].requires_grad, "outputs1 has no gradients!"
 
-            # assert outputs2['low_res_logits'].requires_grad, "outputs2 has no gradients!"
 
-            # print('outputs1', outputs1['low_res_logits'].shape)
-            # print('outputs2', outputs2['low_res_logits'].shape)
-            # print('low_res_label_batch', low_res_label_batch.shape)
-            # print('label_batch', label_batch.shape)
 
-            loss1, loss_ce1, loss_dice1 = calc_loss(outputs1, low_res_label_batch, label_batch, ce_loss, dice_loss,
+            loss, loss_ce1, loss_dice1 = calc_loss(outputs1, low_res_label_batch, label_batch, ce_loss, dice_loss,
                                                     dice_weight=args.dice_param)
-            # loss2, loss_ce2, loss_dice2 = calc_loss(outputs2, label_batch, ce_loss, dice_loss,
-            #                                         dice_weight=args.dice_param)
-
-            weight = 0.6 ** (0.990 ** epoch_num)
-            # loss = (1 - weight) * loss1 + (weight) * loss2
-            loss = loss1
 
             assert loss.requires_grad, "Loss does not require gradients!"
 
@@ -323,8 +270,6 @@ def trainer_synapse(args, model, snapshot_path, multimask_output, low_res):
                 for param_group in optimizer.param_groups:
                     param_group['lr'] = lr_
 
-            # if scheduler:
-            #     scheduler.step()
 
             iter_num += 1
 
@@ -333,12 +278,8 @@ def trainer_synapse(args, model, snapshot_path, multimask_output, low_res):
             writer.add_scalar('info/total_loss', loss, iter_num)
             writer.add_scalar('info/loss_ce1', loss_ce1, iter_num)
             writer.add_scalar('info/loss_dice1', loss_dice1, iter_num)
-            # writer.add_scalar('info/loss_ce2', loss_ce2, iter_num)
-            # writer.add_scalar('info/loss_dice2', loss_dice2, iter_num)
 
             logging.info(f'Iteration {iter_num}: Loss={loss.item():.4f}, CE={loss_ce1.item():.4f}, Dice={loss_dice1.item():.4f}')
-            # logging.info('iteration %d : loss : %f, loss_ce1: %f, loss_dice1: %f, loss_ce2: %f, loss_dice2: %f' % (
-            # iter_num, loss.item(), loss_ce1.item(), loss_dice1.item(), loss_ce2.item(), loss_dice2.item()))
 
         # Visualizations every log_interval iterations
         if iter_num % args.log_interval == 0:
@@ -364,13 +305,10 @@ def trainer_synapse(args, model, snapshot_path, multimask_output, low_res):
         # Early stopping
         if (epoch_num + 1) >= args.stop_epoch:
             final_checkpoint = os.path.join(snapshot_path, f'epoch_{epoch_num + 1}.pth')
-            # save_model(model, final_checkpoint, args.n_gpu > 1)
+
             logging.info("Early stopping triggered.")
             epoch_iterator.close()
             break
-
-        # Optional: Evaluation and logging metrics can be added here
-        # For example, compute validation metrics and update best_performance
 
     # Final model save
     final_save_path = os.path.join(snapshot_path, f'final_epoch_{args.max_epochs}.pth')

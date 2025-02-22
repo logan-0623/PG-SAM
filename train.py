@@ -13,7 +13,7 @@ from importlib import import_module  # 动态导入模块
 # from lora_sam import LoRA_Sam  # LoRA（低秩适配）实现
 from segment_anything import sam_model_registry  # SAM模型注册工具
 from segment_anything.modeling import PromptEncoder  # SAM模型注册工具
-from trainer1 import trainer_synapse  # Synapse数据集的训练器
+from trainer import trainer_synapse  # Synapse数据集的训练器
 from icecream import ic  # 调试工具
 
 # 定义命令行参数解析
@@ -123,51 +123,14 @@ if __name__ == "__main__":
     if not os.path.exists(snapshot_path):
         os.makedirs(snapshot_path)
 
-    # 注册和初始化SAM模型
-    # sam, img_embedding_size = sam_model_registry[args.vit_name](
-    #     image_size=args.img_size,
-    #     num_classes=args.num_classes,
-    #     checkpoint=args.ckpt,
-    #     pixel_mean=[0, 0, 0],
-    #     pixel_std=[1, 1, 1]
-    # )
-
-    # 旧版
-    # print('Use net origin decoder')
-    # sam, img_embedding_size = sam_model_registry["build_sam_vit_b_old"](checkpoint="model_weights/sam_vit_b_01ec64.pth", image_size=224,
-    #                                                     num_classes=args.num_classes,  # 很重要
-    #                                                     pixel_mean=[0, 0, 0],
-    #                                                     pixel_std=[1, 1, 1]
-    #                                                     )
-
-
-    # 新 decoder
-    # print('Use net New decoder')
-    # sam, img_embedding_size = sam_model_registry["build_sam_vit_b_new"](checkpoint="model_weights/sam_vit_b_01ec64.pth",
-    #                                                                     image_size=224,
-    #                                                                     num_classes=args.num_classes + 1,  # 很重要
-    #                                                                     pixel_mean=[0, 0, 0],
-    #                                                                     pixel_std=[1, 1, 1]
-    #                                                                     )
-
     print('Use net New Vit H decoder')
-    sam, img_embedding_size = sam_model_registry["build_sam_vit_h_new"](checkpoint="model_weights/sam_vit_h_4b8939.pth",
+    sam, img_embedding_size = sam_model_registry["build_sam_vit_h_new"](checkpoint=args.ckpt,
                                                                         image_size=224,
                                                                         num_classes=args.num_classes + 1,
                                                                         pixel_mean=[0, 0, 0],
                                                                         pixel_std=[1, 1, 1]
                                                                         )
 
-
-
-    # sam, img_embedding_size = sam_model_registry["build_sam_vit_h_old"](checkpoint="model_weights/sam_vit_h_4b8939.pth",
-    #                                                                     image_size=224,
-    #                                                                     num_classes=args.num_classes,
-    #                                                                     pixel_mean=[0, 0, 0],
-    #                                                                     pixel_std=[1, 1, 1]
-    #                                                                     )
-
-    # print("img_embedding_size:", img_embedding_size) #14
 
     # 动态加载LoRA模块并初始化
     pkg = import_module(args.module)
@@ -180,9 +143,9 @@ if __name__ == "__main__":
     net = pkg.MultiModalSegmentor(sam, classnames, lora_rank=4).cuda()
 
     # 加载LoRA权重（如果指定）
-    print('------Load model weight------')
-    weight = '/mnt/sda/feilongtang/John/Miccai_sam/code/dual-sam/output/sam/results/Synapse_224_pretrain_vit_h_new_2_decoder_epo300_bs12_lr0.0026/epoch_300.pth'
-    net.load_all_weights(weight)
+    # print('------Load model weight------')
+    # weight = '/mnt/sda/feilongtang/John/Miccai_sam/code/dual-sam/output/sam/results/Synapse_224_pretrain_vit_h_new_2_decoder_epo300_bs12_lr0.0026/epoch_300.pth'
+    # net.load_all_weights(weight)
 
     # 根据分类任务配置输出
     if args.num_classes > 1:
@@ -191,8 +154,6 @@ if __name__ == "__main__":
         multimask_output = False
 
     low_res = img_embedding_size * 4  # 低分辨率调整
-
-    # print('low_res', low_res)
 
     # 保存配置文件
     config_file = os.path.join(snapshot_path, 'config.txt')
