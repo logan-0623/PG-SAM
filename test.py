@@ -23,9 +23,7 @@ class_to_name = {1: 'spleen', 2: 'right kidney', 3: 'left kidney', 4: 'gallbladd
 def inference(args, multimask_output, db_config, model, test_save_path=None):
     print("Testing ...")
 
-    text_dir = "/mnt/sda/feilongtang/John/Miccai_sam/code/dual-sam/testset/test_vol_h5/output_image_text_pairs/texts"
-
-    # db_test = db_config['Dataset'](base_dir=args.volume_path, list_dir=args.list_dir, split='test_vol')
+    text_dir = " ... " # put your data path
 
     db_test = Synapse_dataset(args.volume_path, args.list_dir, text_dir, split="train", data="test", transform = None)
 
@@ -90,7 +88,7 @@ if __name__ == '__main__':
     parser.add_argument('--deterministic', type=int, default=1, help='Use deterministic training')
 
     parser.add_argument('--lora_ckpt', type=str,
-                        default='/mnt/sda/feilongtang/John/Miccai_sam/code/dual-sam/output/sam/results/Synapse_224_pretrain_vit_h_new_2_decoder_epo300_bs12_lr0.0026/epoch_300.pth',
+                        default='', # put the saved model weight file
                         help='Path to LoRA checkpoint')
     # --------------
     # parser.add_argument('--vit_name', type=str, default='vit_b', help='选择的ViT模型')
@@ -101,12 +99,7 @@ if __name__ == '__main__':
     # --------------
 
     parser.add_argument('--rank', type=int, default=4, help='Rank for LoRA adaptation')
-
-
     parser.add_argument('--module', type=str, default='net_injector', help='Dynamic module import')
-
-    # parser.add_argument('--output_dir', type=str, default="/mnt/sda/feilongtang/John/Miccai_sam/code/dual-sam/testset/test_vol_h5/")
-
     parser.add_argument('--stage', type=int, default=3)
     parser.add_argument('--mode', type=str, default='test')
 
@@ -141,30 +134,6 @@ if __name__ == '__main__':
     if not os.path.exists(args.output_dir):
         os.makedirs(args.output_dir)
 
-    # Register model
-    # sam, img_embedding_size = sam_model_registry[args.vit_name](
-    #     image_size=args.img_size,
-    #     num_classes=args.num_classes,
-    #     checkpoint=args.ckpt,
-    #     pixel_mean=[0, 0, 0],
-    #     pixel_std=[1, 1, 1]
-    # )
-
-    # 旧版
-    # sam, img_embedding_size = sam_model_registry["build_sam_vit_b_old"](checkpoint="model_weights/sam_vit_b_01ec64.pth", image_size=224,
-    #                                                     num_classes=args.num_classes,  # 很重要
-    #                                                     pixel_mean=[0, 0, 0],
-    #                                                     pixel_std=[1, 1, 1]
-    #                                                     )
-
-    # 新 decoder
-    # print('Use net New decoder')
-    # sam, img_embedding_size = sam_model_registry["build_sam_vit_b_new"](checkpoint="model_weights/sam_vit_b_01ec64.pth",
-    #                                                                     image_size=224,
-    #                                                                     num_classes=args.num_classes + 1,  # 很重要
-    #                                                                     pixel_mean=[0, 0, 0],
-    #                                                                     pixel_std=[1, 1, 1]
-    #                                                                     )
 
     print('Use net New Vit H decoder')
     sam, img_embedding_size = sam_model_registry["build_sam_vit_h_new"](checkpoint="model_weights/sam_vit_h_4b8939.pth",
@@ -180,9 +149,6 @@ if __name__ == '__main__':
 
     assert args.lora_ckpt is not None
     net.load_all_weights(args.lora_ckpt)
-
-    # pkg = import_module(args.module)
-    # net = pkg.LoRA_Sam(sam, args.rank).cuda()
 
     if args.num_classes > 1:
         multimask_output = True
@@ -203,7 +169,7 @@ if __name__ == '__main__':
     else:
         test_save_path = None
 
-    test_save_path = "/mnt/sda/feilongtang/John/Miccai_sam/code/dual-sam/testset/test_vol_h5/preds/"
+    test_save_path = "" # put your path to save
 
     print('---------------------------------------------------------------------------------')
     print("dataset_config[dataset_name]['Dataset']", dataset_config[dataset_name]['Dataset'])

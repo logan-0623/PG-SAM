@@ -19,8 +19,8 @@ from icecream import ic  # 调试工具
 # 定义命令行参数解析
 parser = argparse.ArgumentParser()
 # 数据路径、输出路径和数据集名称
-parser.add_argument('--root_path', type=str, default='/mnt/sda/feilongtang/John/Miccai_sam/code/dual-sam/trainset/train_npz_new_224', help='数据根目录')
-parser.add_argument('--output', type=str, default='/mnt/sda/feilongtang/John/Miccai_sam/code/dual-sam/output/sam/results', help='输出结果目录')
+parser.add_argument('--root_path', type=str, default='./trainset/train_npz_new_224', help='数据根目录')
+parser.add_argument('--output', type=str, default='./output/sam/results', help='输出结果目录')
 parser.add_argument('--dataset', type=str, default='Synapse', help='实验名称')
 
 # 数据和训练相关参数
@@ -144,7 +144,7 @@ if __name__ == "__main__":
 
     # 加载LoRA权重（如果指定）
     # print('------Load model weight------')
-    # weight = '/mnt/sda/feilongtang/John/Miccai_sam/code/dual-sam/output/sam/results/Synapse_224_pretrain_vit_h_new_2_decoder_epo300_bs12_lr0.0026/epoch_300.pth'
+    # weight = './output/sam/results/Synapse_224_pretrain_vit_h_new_2_decoder_epo300_bs12_lr0.0026/epoch_300.pth'
     # net.load_all_weights(weight)
 
     # 根据分类任务配置输出

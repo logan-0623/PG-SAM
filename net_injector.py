@@ -2,14 +2,11 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import clip
-# from lora_guide import LoRA_Sam  # 参考 H-SAM
-from lora_change import LoRA_Sam
+from Lora import LoRA_Sam
 from segment_anything import sam_model_registry
 from torch.nn.parameter import Parameter
-
 from transformers import AutoTokenizer
 import math
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -386,13 +383,3 @@ class MultiModalSegmentor(nn.Module):
         outputs1 = self.loRASegmentor(image, multimask_output, image_size, gt=gt, guide_matrix=guide_matrix)
 
         return outputs1
-
-# 测试
-if __name__ == "__main__":
-    sam, _ = sam_model_registry["build_sam_vit_b_new"](checkpoint="model_weights/sam_vit_b_01ec64.pth", image_size=224, num_classes=2)
-    classnames = ["spleen", "right kidney", "left kidney", "gallbladder", "liver", "stomach", "aorta", "pancreas"]
-    net = MultiModalSegmentor(sam, classnames, lora_rank=4).cuda()
-    image = torch.rand(size=(2, 256, 14,14))
-
-
-    # outputs1 = net(image, text, True, 224, gt)
