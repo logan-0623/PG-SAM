@@ -31,7 +31,7 @@ SeSAM/
 Clone the repository using Git:
 
 ```bash
-git clone https://github.com/your-username/SeSAM.git
+git clone https://github.com/logan-0623/SeSAM.git
 cd SeSAM
 ```
 
