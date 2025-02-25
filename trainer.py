@@ -37,12 +37,12 @@ def calc_loss(outputs, low_res_label_batch, label_batch, ce_loss, dice_loss, dic
     low_res_logits = outputs['low_res_logits']
     mask_224 = outputs['masks']
 
-    # 低纬度 的 loss （ dim=56 ）
+    # low rank loss （ dim=56 ）
     loss_ce1 = ce_loss(low_res_logits, low_res_label_batch[:].long())
     loss_dice1 = dice_loss(low_res_logits, low_res_label_batch, softmax=True)
     loss1 = ((1 - dice_weight) * loss_ce1 + dice_weight * loss_dice1)
 
-    # 224维度的 mask loss
+    # 224 rank loss
     loss_ce2 = ce_loss(mask_224, label_batch[:].long())
     loss_dice2 = dice_loss(mask_224, label_batch, softmax=True)
     loss2 = ((1 - dice_weight) * loss_ce2 + dice_weight * loss_dice2)
@@ -122,16 +122,16 @@ def initialize_dataloader(args):
     """
     Initialize the DataLoader for the Synapse dataset.
     """
-    base_dir = "/mnt/sda/feilongtang/John/Miccai_sam/code/dual-sam/trainset/train_npz_new_224"
+    base_dir = "./trainset/train_npz_new_224"
     list_dir = "./lists/lists_Synapse"
     data_type = "Big"  # This can be parameterized if needed
 
     logging.info(f'Using dataset type: {data_type}')
 
     if data_type == "Big":
-        text_dir = "/mnt/sda/feilongtang/John/Miccai_sam/code/dual-sam/trainset/output_image_text_pairs_all_1/texts"
+        text_dir = "./trainset/output_image_text_pairs_all_1/texts"
     else:
-        text_dir = "/mnt/sda/feilongtang/John/Miccai_sam/code/dual-sam/trainset/output_image_text_pairs/texts"
+        text_dir = "./trainset/output_image_text_pairs/texts"
         logging.info('Using small dataset')
 
     transform = transforms.Compose([

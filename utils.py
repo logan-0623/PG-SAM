@@ -135,22 +135,10 @@ def test_single_volume(image, label, text_batch, net, classes, multimask_output,
             inputs = repeat(inputs, 'b c h w -> b (repeat c) h w', repeat=3)
             net.eval()
             with torch.no_grad():
-                # print('text_batch', text_batch)
-                # outputs = net(inputs, text_batch, multimask_output, patch_size[0], gt = None)
-                # output_masks = outputs['masks']
-
-                # outputs1,outputs2,_,_ = net(inputs, multimask_output, patch_size[0], gt=None, mode='test')
-
-                # outputs1, outputs2, _, _ = net(inputs, text_batch, multimask_output, patch_size[0], gt=None)
 
                 outputs1 = net(inputs, text_batch, multimask_output, patch_size[0], gt=None)
 
                 output_masks = outputs1['masks']
-
-                # if stage == 3:
-                #     output_masks = (outputs1['masks'] + outputs2['masks']) / 2
-                # elif stage == 2:
-                #     output_masks = outputs2['masks']
 
                 out = torch.argmax(softmax(output_masks, dim=1), dim=1).squeeze(0)
 
@@ -172,11 +160,6 @@ def test_single_volume(image, label, text_batch, net, classes, multimask_output,
         inputs = repeat(inputs, 'b c h w -> b (repeat c) h w', repeat=3)
         net.eval()
         with torch.no_grad():
-            # outputs = net(inputs, multimask_output, patch_size[0])
-
-            # outputs1, outputs2, _, _ = net(inputs, text_batch, multimask_output, patch_size[0], gt=None)
-            #
-            # output_masks = (outputs1['masks'] + outputs2['masks'])/2
 
             outputs1 = net(inputs, text_batch, multimask_output, patch_size[0], gt=None)
 
@@ -193,16 +176,16 @@ def test_single_volume(image, label, text_batch, net, classes, multimask_output,
     for i in range(1, classes + 1):
         metric_list.append(calculate_metric_percase(prediction == i, label == i))
 
-    # if test_save_path is not None:
-        # img_itk = sitk.GetImageFromArray(image.astype(np.float32))
-        # prd_itk = sitk.GetImageFromArray(prediction.astype(np.float32))
-        # lab_itk = sitk.GetImageFromArray(label.astype(np.float32))
-        # img_itk.SetSpacing((1, 1, z_spacing))
-        # prd_itk.SetSpacing((1, 1, z_spacing))
-        # lab_itk.SetSpacing((1, 1, z_spacing))
-        # sitk.WriteImage(prd_itk, test_save_path + '/' + case + "_pred.nii.gz")
-        # sitk.WriteImage(img_itk, test_save_path + '/' + case + "_img.nii.gz")
-        # sitk.WriteImage(lab_itk, test_save_path + '/' + case + "_gt.nii.gz")
+    if test_save_path is not None:
+        img_itk = sitk.GetImageFromArray(image.astype(np.float32))
+        prd_itk = sitk.GetImageFromArray(prediction.astype(np.float32))
+        lab_itk = sitk.GetImageFromArray(label.astype(np.float32))
+        img_itk.SetSpacing((1, 1, z_spacing))
+        prd_itk.SetSpacing((1, 1, z_spacing))
+        lab_itk.SetSpacing((1, 1, z_spacing))
+        sitk.WriteImage(prd_itk, test_save_path + '/' + case + "_pred.nii.gz")
+        sitk.WriteImage(img_itk, test_save_path + '/' + case + "_img.nii.gz")
+        sitk.WriteImage(lab_itk, test_save_path + '/' + case + "_gt.nii.gz")
 
     return metric_list
 

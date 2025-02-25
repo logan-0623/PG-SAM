@@ -91,11 +91,8 @@ if __name__ == '__main__':
                         default='', # put the saved model weight file
                         help='Path to LoRA checkpoint')
     # --------------
-    # parser.add_argument('--vit_name', type=str, default='vit_b', help='选择的ViT模型')
-    # parser.add_argument('--ckpt', type=str, default='model_weights/sam_vit_b_01ec64.pth', help='sam预训练模型路径')
-    # --------------
-    parser.add_argument('--vit_name', type=str, default='vit_h', help='选择的ViT模型')
-    parser.add_argument('--ckpt', type=str, default='model_weights/sam_vit_h_4b8939.pth', help='sam预训练模型路径')
+    parser.add_argument('--vit_name', type=str, default='vit_h', help='the Vit model')
+    parser.add_argument('--ckpt', type=str, default='model_weights/sam_vit_h_4b8939.pth', help='sam check point')
     # --------------
 
     parser.add_argument('--rank', type=int, default=4, help='Rank for LoRA adaptation')

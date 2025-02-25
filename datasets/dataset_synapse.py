@@ -81,23 +81,20 @@ def random_elastic(image, label, alpha, sigma,
     # Random affine
     center_square = np.float32(shape_size) // 2
     square_size = min(shape_size) // 3
-    # pts1: 仿射变换前的点(3个点)
+
     pts1 = np.float32([center_square + square_size,
                        [center_square[0] + square_size,
                         center_square[1] - square_size],
                        center_square - square_size])
-    # pts2: 仿射变换后的点
+
     pts2 = pts1 + random_state.uniform(-alpha_affine, alpha_affine,
                                        size=pts1.shape).astype(np.float32)
-    # 仿射变换矩阵
+
     M = cv2.getAffineTransform(pts1, pts2)
-    # 对image进行仿射变换.
+
     imageB = cv2.warpAffine(image, M, shape_size[::-1], borderMode=cv2.BORDER_REFLECT_101)
     labelB = cv2.warpAffine(label, M, shape_size[::-1], borderMode=cv2.BORDER_REFLECT_101)
 
-    # generate random displacement fields
-    # random_state.rand(*shape)会产生一个和shape一样打的服从[0,1]均匀分布的矩阵
-    # *2-1是为了将分布平移到[-1, 1]的区间, alpha是控制变形强度的变形因子
     dx = gaussian_filter((random_state.rand(*shape) * 2 - 1), sigma) * alpha
     dy = gaussian_filter((random_state.rand(*shape) * 2 - 1), sigma) * alpha
     # generate meshgrid
@@ -201,14 +198,12 @@ class Synapse_dataset(Dataset):
         self.data = data
 
         if self.data == "Big":
-            # 完整数据集
             print("----------------------------------Use full data to train----------------------------------")
             self.sample_list = open(os.path.join(list_dir, "train_full.txt")).readlines()
         elif self.data == "test":
             print("----------------------------------Use test data----------------------------------")
             self.sample_list = open(os.path.join(list_dir, "test_vol.txt")).readlines()
         else:
-            # 10%数据集
             self.sample_list = open(os.path.join(list_dir, f"{split}.txt")).readlines()
 
         self.data_dir = base_dir
@@ -274,7 +269,6 @@ class Synapse_dataset_test(Dataset):
             data = np.load(data_path)
             image, label = data['image'], data['label']
         else:
-            # 测试的时候使用
             vol_name = self.sample_list[idx].strip('\n')
             filepath = self.data_dir + "/{}.npy.h5".format(vol_name)
             data = h5py.File(filepath)
@@ -292,9 +286,9 @@ class Synapse_dataset_test(Dataset):
 
 # Test code
 if __name__ == "__main__":
-    base_dir = "/mnt/sda/feilongtang/John/Miccai_sam/code/dual-sam/trainset/train_npz_new_224"
+    base_dir = "./trainset/train_npz_new_224"
     list_dir = "./lists/lists_Synapse"
-    text_dir = "/mnt/sda/feilongtang/John/Miccai_sam/code/dual-sam/trainset/output_image_text_pairs/texts"
+    text_dir = "./trainset/output_image_text_pairs/texts"
 
     # Create dataset instance
     dataset = Synapse_dataset(

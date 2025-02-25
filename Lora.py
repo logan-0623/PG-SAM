@@ -65,7 +65,7 @@ class MultiScaleCrossAttention(nn.Module):
         ])
 
     def forward(self, src, guide):
-        # 多尺度特征融合
+        # Multi-scale feature fusion
         # src = src + guide
         src = src + F.interpolate(guide, size=src.shape[2:], mode='bilinear', align_corners=False)
 
@@ -73,7 +73,7 @@ class MultiScaleCrossAttention(nn.Module):
         src = src.view(B, C, -1).permute(0, 2, 1)
         guide = guide.view(B, C, -1).permute(0, 2, 1)
 
-        # 多层交叉注意力
+        # Multi-layer cross attention
         for i, layer in enumerate(self.layers):
             residual = src
             src = layer(torch.cat([src, guide], dim=1))[:, :src.size(1)]
@@ -98,15 +98,15 @@ class AdaptiveFeatureFusion(nn.Module):
         )
 
     def forward(self, image_feat, guide_feat):
-        # 通道注意力
+        # Channel attention
         channel_weight = self.channel_attn(image_feat + guide_feat)
 
-        # 空间注意力
+        # Spatial attention
         avg_pool = torch.mean(image_feat, dim=1, keepdim=True)
         max_pool = torch.max(image_feat, dim=1, keepdim=True)[0]
         spatial_weight = self.spatial_attn(torch.cat([avg_pool, max_pool], dim=1))
 
-        # 自适应融合
+        # Adaptive fusion
         fused_feat = channel_weight * spatial_weight * guide_feat
         return image_feat + fused_feat
 
@@ -119,19 +119,19 @@ class DynamicPromptGenerator(nn.Module):
             nn.ReLU(),
             nn.Conv2d(128, 64, 3, padding=1)
         )
-        self.point_head = nn.Conv2d(64, num_points * 2, 1)  # (x, y) 坐标
+        self.point_head = nn.Conv2d(64, num_points * 2, 1)  # (x, y) coordinates
         self.box_head = nn.Conv2d(64, 4, 1)  # (x1, y1, x2, y2)
 
     def forward(self, guide_matrix):
         B, C, H, W = guide_matrix.shape
         feat = self.coord_conv(guide_matrix)  # [B, 64, H, W]
 
-        # 生成关键点
+        # Generate key points
         point_logits = self.point_head(feat)  # [B, num_points * 2, H, W]
-        point_logits = point_logits.mean(dim=(2, 3))  # 全局平均池化，得到 [B, num_points * 2]
+        point_logits = point_logits.mean(dim=(2, 3))  # Global average pooling, resulting in [B, num_points * 2]
         point_coords = torch.sigmoid(point_logits.view(B, self.num_points, 2))  # [B, num_points, 2]
 
-        # 生成边界框
+        # Generate bounding boxes
         box_params = torch.sigmoid(
             self.box_head(feat).mean(dim=(2, 3))  # [B, 4]
         )
@@ -147,22 +147,22 @@ class LoRA_Sam(nn.Module):
         self.sam = sam_model
         self.r = r
 
-        # 冻结原始参数
+        # Freeze original parameters
         for param in self.sam.parameters():
             param.requires_grad = False
 
-        # 初始化增强模块
+        # Initialize enhancement modules
         self.cross_attn = MultiScaleCrossAttention(256, 8)
 
         self.feature_fusion = AdaptiveFeatureFusion(256)
 
-        # 动态LoRA层配置
+        # Dynamic LoRA layer configuration
         self.lora_layer = list(
             range(len(sam_model.image_encoder.blocks)))
         self.w_As = []  # These are linear layers
         self.w_Bs = []
 
-        # lets freeze first
+        # Let's freeze first
         for param in sam_model.image_encoder.parameters():
             param.requires_grad = False
 
@@ -175,7 +175,7 @@ class LoRA_Sam(nn.Module):
     def _init_lora_adapters(self):
         r = 4
         for t_layer_i, blk in enumerate(self.sam.image_encoder.blocks):
-            # If we only want few lora layer instead of all
+            # If we only want a few LoRA layers instead of all
             if t_layer_i not in self.lora_layer:
                 continue
             w_qkv_linear = blk.attn.qkv
@@ -204,25 +204,25 @@ class LoRA_Sam(nn.Module):
 
 
     def forward(self, batched_input, multimask_output, image_size, gt=None, guide_matrix=None):
-        # 提取基础特征
+        # Extract base features
         image_embeddings, low_image_embeddings = self.sam.image_encoder(batched_input)
 
         # print(f"Image embeddings require grad: {image_embeddings.requires_grad}")
 
-        # 多阶段特征增强
+        # Multi-stage feature enhancement
         if guide_matrix is not None:
-            # -------------------------------guide matrix 方法 -------------------------------
-            # 第一阶段：跨尺度注意力融合
+            # -------------------------------guide matrix method -------------------------------
+            # First stage: Cross-scale attention fusion
             attn_feat = self.cross_attn(image_embeddings, guide_matrix)
 
-            # 第二阶段：自适应特征融合
+            # Second stage: Adaptive feature fusion
             enhanced_feat = self.feature_fusion(image_embeddings, attn_feat)
 
-            # 第三阶段：残差连接
+            # Third stage: Residual connection
             image_embeddings = image_embeddings + 0.1 * enhanced_feat
 
 
-        # 后续处理流程
+        # Subsequent processing flow
         sparse_embeddings, dense_embeddings = self.sam.prompt_encoder(
             points=None, boxes=None, masks=None
         )
@@ -233,7 +233,7 @@ class LoRA_Sam(nn.Module):
             sparse_prompt_embeddings=sparse_embeddings,
             dense_prompt_embeddings=dense_embeddings,
             multimask_output=multimask_output,
-            # 使用 guide matrix
+            # Using guide matrix
             guide_matrix=guide_matrix
         )
         masks = self.sam.postprocess_masks(
@@ -255,7 +255,7 @@ class LoRA_Sam(nn.Module):
 
         pip install safetensor if you do not have one installed yet.
 
-        save both lora and fc parameters.
+        Save both LoRA and FC parameters.
         """
 
         assert filename.endswith(".pt") or filename.endswith('.pth')
@@ -266,7 +266,7 @@ class LoRA_Sam(nn.Module):
         prompt_encoder_tensors = {}
         mask_decoder_tensors = {}
 
-        # save prompt encoder, only `state_dict`, the `named_parameter` is not permitted
+        # Save prompt encoder, only `state_dict`, the `named_parameter` is not permitted
         if isinstance(self.sam, torch.nn.DataParallel) or isinstance(self.sam, torch.nn.parallel.DistributedDataParallel):
             state_dict = self.sam.module.state_dict()
         else:
@@ -285,10 +285,9 @@ class LoRA_Sam(nn.Module):
     def load_state_dict(self, filename: str) -> None:
         r"""Only safetensors is supported now.
 
-        pip install safetensor if you do not have one installed yet.\
+        pip install safetensor if you do not have one installed yet.
 
-
-        load both lora and fc parameters.
+        Load both LoRA and FC parameters.
         """
 
         assert filename.endswith(".pt") or filename.endswith('.pth')
@@ -308,13 +307,13 @@ class LoRA_Sam(nn.Module):
         sam_dict = self.sam.state_dict()
         sam_keys = sam_dict.keys()
 
-        # load prompt encoder
+        # Load prompt encoder
         prompt_encoder_keys = [k for k in sam_keys if 'prompt_encoder' in k]
         prompt_encoder_values = [state_dict[k] for k in prompt_encoder_keys]
         prompt_encoder_new_state_dict = {k: v for k, v in zip(prompt_encoder_keys, prompt_encoder_values)}
         sam_dict.update(prompt_encoder_new_state_dict)
 
-        # load mask decoder
+        # Load mask decoder
         mask_decoder_keys = [k for k in sam_keys if 'mask_decoder' in k]
         mask_decoder_values = [state_dict[k] for k in mask_decoder_keys]
         mask_decoder_new_state_dict = {k: v for k, v in zip(mask_decoder_keys, mask_decoder_values)}
@@ -335,5 +334,3 @@ if __name__ == "__main__":
     print('output_masks', output_masks.shape)
     print('low_res_logits', low_res_logits.shape)
     print('low_res_logits', low_res_logits)
-
-
