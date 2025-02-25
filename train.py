@@ -1,66 +1,66 @@
-# 导入所需的库
-import argparse  # 用于解析命令行参数
-import logging  # 处理日志
-import os  # 文件和目录操作
-import random  # 随机数生成
-import numpy as np  # 数值计算库
-import torch  # PyTorch深度学习框架
-import torch.backends.cudnn as cudnn  # 控制CUDNN加速选项
+# Import required libraries
+import argparse  # For parsing command line arguments
+import logging  # For handling logs
+import os  # For file and directory operations
+import random  # For generating random numbers
+import numpy as np  # Numerical computation library
+import torch  # PyTorch deep learning framework
+import torch.backends.cudnn as cudnn  # For controlling CUDNN acceleration options
 
-from importlib import import_module  # 动态导入模块
+from importlib import import_module  # For dynamically importing modules
 
-# 导入自定义模块
-# from lora_sam import LoRA_Sam  # LoRA（低秩适配）实现
-from segment_anything import sam_model_registry  # SAM模型注册工具
-from segment_anything.modeling import PromptEncoder  # SAM模型注册工具
-from trainer import trainer_synapse  # Synapse数据集的训练器
-from icecream import ic  # 调试工具
+# Import custom modules
+# from lora_sam import LoRA_Sam  # Implementation of LoRA (Low-Rank Adaptation)
+from segment_anything import sam_model_registry  # SAM model registry tool
+from segment_anything.modeling import PromptEncoder  # SAM model registry tool
+from trainer import trainer_synapse  # Trainer for the Synapse dataset
+from icecream import ic  # Debugging tool
 
-# 定义命令行参数解析
+# Define command line argument parsing
 parser = argparse.ArgumentParser()
-# 数据路径、输出路径和数据集名称
-parser.add_argument('--root_path', type=str, default='./trainset/train_npz_new_224', help='数据根目录')
-parser.add_argument('--output', type=str, default='./output/sam/results', help='输出结果目录')
-parser.add_argument('--dataset', type=str, default='Synapse', help='实验名称')
+# Data path, output path and dataset name
+parser.add_argument('--root_path', type=str, default='./trainset/train_npz_new_224', help='Data root directory')
+parser.add_argument('--output', type=str, default='./output/sam/results', help='Output results directory')
+parser.add_argument('--dataset', type=str, default='Synapse', help='Experiment name')
 
-# 数据和训练相关参数
-parser.add_argument('--list_dir', type=str, default='./lists/lists_Synapse', help='数据列表路径')
-parser.add_argument('--num_classes', type=int, default=8, help='分类数')
-parser.add_argument('--max_iterations', type=int, default=30000, help='最大迭代次数')
-parser.add_argument('--max_epochs', type=int, default=200, help='最大训练轮数')
-parser.add_argument('--stop_epoch', type=int, default=20, help='停止训练的轮数')
-parser.add_argument('--batch_size', type=int, default=12, help='每GPU的批量大小')
-parser.add_argument('--n_gpu', type=int, default=2, help='GPU数量')
-parser.add_argument('--split', type=str,default='train', help='list dir')
+# Data and training related parameters
+parser.add_argument('--list_dir', type=str, default='./lists/lists_Synapse', help='Data list directory')
+parser.add_argument('--num_classes', type=int, default=8, help='Number of classes')
+parser.add_argument('--max_iterations', type=int, default=30000, help='Maximum number of iterations')
+parser.add_argument('--max_epochs', type=int, default=200, help='Maximum number of training epochs')
+parser.add_argument('--stop_epoch', type=int, default=20, help='Epoch to stop training')
+parser.add_argument('--batch_size', type=int, default=12, help='Batch size per GPU')
+parser.add_argument('--n_gpu', type=int, default=2, help='Number of GPUs')
+parser.add_argument('--split', type=str, default='train', help='List directory split')
 
-# 决定性和学习率控制参数
-parser.add_argument('--deterministic', type=int, default=1, help='是否使用确定性训练')
-parser.add_argument('--base_lr', type=float, default=0.0025, help='学习率')
+# Determinism and learning rate control parameters
+parser.add_argument('--deterministic', type=int, default=1, help='Whether to use deterministic training')
+parser.add_argument('--base_lr', type=float, default=0.0025, help='Learning rate')
 
-# 图像尺寸、随机种子和模型配置
-parser.add_argument('--img_size', type=int, default=224, help='输入图像大小')
-parser.add_argument('--seed', type=int, default=1234, help='随机种子')
+# Image size, random seed and model configuration
+parser.add_argument('--img_size', type=int, default=224, help='Input image size')
+parser.add_argument('--seed', type=int, default=1234, help='Random seed')
 
 # --------------
-# parser.add_argument('--vit_name', type=str, default='vit_b', help='选择的ViT模型')
-# parser.add_argument('--ckpt', type=str, default='model_weights/sam_vit_b_01ec64.pth', help='sam预训练模型路径')
+# parser.add_argument('--vit_name', type=str, default='vit_b', help='Selected ViT model')
+# parser.add_argument('--ckpt', type=str, default='model_weights/sam_vit_b_01ec64.pth', help='SAM pre-trained model path')
 # --------------
-parser.add_argument('--vit_name', type=str, default='vit_h', help='选择的ViT模型')
-parser.add_argument('--ckpt', type=str, default='model_weights/sam_vit_h_4b8939.pth', help='sam预训练模型路径')
+parser.add_argument('--vit_name', type=str, default='vit_h', help='Selected ViT model')
+parser.add_argument('--ckpt', type=str, default='model_weights/sam_vit_h_4b8939.pth', help='SAM pre-trained model path')
 # --------------
 
-# LoRA相关参数
-parser.add_argument('--lora_ckpt', type=str, default=None, help='微调的LoRA模型路径')
-parser.add_argument('--rank', type=int, default=4, help='LoRA适配的秩参数')
+# LoRA related parameters
+parser.add_argument('--lora_ckpt', type=str, default=None, help='Path to the fine-tuned LoRA model')
+parser.add_argument('--rank', type=int, default=4, help='Rank parameter for LoRA adaptation')
 
-# 其他配置
-parser.add_argument('--warmup', action='store_true', help='是否启用学习率预热')
-parser.add_argument('--warmup_period', type=int, default=250, help='预热持续的迭代数')
-parser.add_argument('--AdamW', action='store_true', help='是否使用AdamW优化器')
+# Other configurations
+parser.add_argument('--warmup', action='store_true', help='Whether to use learning rate warmup')
+parser.add_argument('--warmup_period', type=int, default=250, help='Number of iterations for warmup')
+parser.add_argument('--AdamW', action='store_true', help='Whether to use the AdamW optimizer')
 
-# 网络选择
-parser.add_argument('--module', type=str, default='net_injector', help='动态加载的模块名称')
-parser.add_argument('--dice_param', type=float, default=0.8, help='Dice损失的参数')
+# Network selection
+parser.add_argument('--module', type=str, default='net_injector', help='Name of the dynamically loaded module')
+parser.add_argument('--dice_param', type=float, default=0.8, help='Dice loss parameter')
 
 parser.add_argument(
         '--use_amp',
@@ -72,19 +72,19 @@ parser.add_argument(
         '--log_interval',
         type=int,
         default=100,
-        help='How many iterations to wait before logging training status (default: 100)'
+        help='Number of iterations to wait before logging training status (default: 100)'
     )
 
 parser.add_argument(
     '--save_interval',
     type=int,
     default=50,
-    help='How many epochs to wait before saving the model (default: 50)'
+    help='Number of epochs to wait before saving the model (default: 50)'
 )
 args = parser.parse_args()
 
 if __name__ == "__main__":
-    # 设置确定性训练以控制随机性
+    # Set deterministic training to control randomness
     if not args.deterministic:
         cudnn.benchmark = True
         cudnn.deterministic = False
@@ -92,13 +92,13 @@ if __name__ == "__main__":
         cudnn.benchmark = False
         cudnn.deterministic = True
 
-    # 设置随机种子
+    # Set random seed
     random.seed(args.seed)
     np.random.seed(args.seed)
     torch.manual_seed(args.seed)
     torch.cuda.manual_seed(args.seed)
 
-    # 数据集配置
+    # Dataset configuration
     dataset_name = args.dataset
     dataset_config = {
         'Synapse': {
@@ -108,7 +108,7 @@ if __name__ == "__main__":
         }
     }
 
-    # 设置实验输出目录
+    # Set experiment output directory
     args.is_pretrain = True
     args.exp = dataset_name + '_' + str(args.img_size)
     snapshot_path = os.path.join(args.output, "{}".format(args.exp))
@@ -131,8 +131,7 @@ if __name__ == "__main__":
                                                                         pixel_std=[1, 1, 1]
                                                                         )
 
-
-    # 动态加载LoRA模块并初始化
+    # Dynamically load the LoRA module and initialize
     pkg = import_module(args.module)
 
     classnames = ["spleen", "right kidney", "left kidney", "gallbladder", "liver", "stomach", "aorta", "pancreas"]
@@ -142,20 +141,20 @@ if __name__ == "__main__":
 
     net = pkg.MultiModalSegmentor(sam, classnames, lora_rank=4).cuda()
 
-    # 加载LoRA权重（如果指定）
+    # Load LoRA weights (if specified)
     # print('------Load model weight------')
     # weight = './output/sam/results/Synapse_224_pretrain_vit_h_new_2_decoder_epo300_bs12_lr0.0026/epoch_300.pth'
     # net.load_all_weights(weight)
 
-    # 根据分类任务配置输出
+    # Set multimask_output based on classification task configuration
     if args.num_classes > 1:
         multimask_output = True
     else:
         multimask_output = False
 
-    low_res = img_embedding_size * 4  # 低分辨率调整
+    low_res = img_embedding_size * 4  # Low resolution adjustment
 
-    # 保存配置文件
+    # Save configuration file
     config_file = os.path.join(snapshot_path, 'config.txt')
     config_items = []
     for key, value in args.__dict__.items():
@@ -164,6 +163,6 @@ if __name__ == "__main__":
     with open(config_file, 'w') as f:
         f.writelines(config_items)
 
-    # 开始训练
+    # Start training
     trainer = {'Synapse': trainer_synapse}
     trainer[dataset_name](args, net, snapshot_path, multimask_output, low_res)
