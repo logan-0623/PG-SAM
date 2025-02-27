@@ -17,8 +17,6 @@ def normal_init(m, mean, std):
 
 
 class res_convdown(nn.Module):
-    '''
-    '''
 
     def __init__(self, in_ch, out_ch, norm=nn.InstanceNorm2d, if_SN=False, bias=True, dropout=None):
         super(res_convdown, self).__init__()

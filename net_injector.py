@@ -174,7 +174,7 @@ class GuideMatrixGenerator(nn.Module):
         self.sim_proj = nn.Linear(512, 196)
 
         self.tokenizer = AutoTokenizer.from_pretrained(
-            "/mnt/sda/feilongtang/John/Miccai_sam/code/dual-sam/bert-base-uncased"
+            "./dual-sam/bert-base-uncased"
         )
 
         self.layer_norm = torch.nn.LayerNorm(196)
@@ -338,8 +338,6 @@ class MultiModalSegmentor(nn.Module):
 
         self.loRASegmentor = LoRASegmentor(sam, lora_rank)
 
-        self.fusion_module = FusionModule(guide_channels=256, image_channels=3)
-
     def load_clip_model(self):
         print("Initializing CLIP model...")
         self.lora_clip, _ = clip.load("ViT-B/32", device="cuda")
@@ -371,8 +369,6 @@ class MultiModalSegmentor(nn.Module):
         guide_matrix = self.GuideMatrixGenerator(image, text_batch)
 
         # print('guide_matrix', guide_matrix.shape)
-
-        fused_tensor = self.fusion_module(image, guide_matrix)
 
         # outputs1, outputs2, attn1, attn1 = self.loRASegmentor(image, multimask_output, image_size, gt = gt , guide_matrix = guide_matrix)
 
