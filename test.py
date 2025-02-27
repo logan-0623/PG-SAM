@@ -72,14 +72,14 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', type=str, default=None, help='The config file provided by the trained model')
     parser.add_argument('--volume_path', type=str,
-                        default='/mnt/sda/feilongtang/John/Miccai_sam/code/dual-sam/testset/test_vol_h5/',
+                        default='./testset/test_vol_h5/',
                         help='Path to test volumes')
     parser.add_argument('--dataset', type=str, default='Synapse', help='Experiment name')
     parser.add_argument('--num_classes', type=int, default=8)
     parser.add_argument('--list_dir', type=str, default='./lists/lists_Synapse/',
                         help='Directory containing dataset lists')
     parser.add_argument('--output_dir', type=str,
-                        default='/mnt/sda/feilongtang/John/Miccai_sam/code/dual-sam/output/sam/test_results',
+                        default='./output/sam/test_results',
                         help='Directory for saving outputs')
     parser.add_argument('--img_size', type=int, default=224, help='Input image size')
     parser.add_argument('--input_size', type=int, default=224, help='Input size for SAM model')
