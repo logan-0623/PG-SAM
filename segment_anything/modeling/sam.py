@@ -105,7 +105,7 @@ class Sam(nn.Module):
         self.prompt_encoder2 = prompt_encoder
         self.mask_decoder2 = mask_decoder2
         self.num_classes = 9
-        self.reduce_factor = 4    
+        self.reduce_factor = 4
         self.register_buffer("pixel_mean", torch.Tensor(pixel_mean).view(-1, 1, 1), False)
         self.register_buffer("pixel_std", torch.Tensor(pixel_std).view(-1, 1, 1), False)
 
@@ -126,11 +126,11 @@ class Sam(nn.Module):
     def forward(self, batched_input, multimask_output, image_size, gt=None, mode='train'):
         # if isinstance(batched_input, list):
         #     outputs = self.forward_test(batched_input, multimask_output)
-            
+
         # else:
         #     outputs = self.forward_train(batched_input, multimask_output, image_size
         outputs = self.forward_train(batched_input, multimask_output, image_size, gt=gt, mode=mode)
-            
+
         return outputs
 
     def forward_train(self, batched_input, multimask_output, image_size,input_points=None, gt=None, mode='train'):
@@ -158,13 +158,13 @@ class Sam(nn.Module):
             'iou_predictions': iou_predictions,
             'low_res_logits': low_res_masks
         }
-        
+
         ps_mask = F.interpolate(low_res_masks,size=(int(low_res_masks.shape[-2]/4), int(low_res_masks.shape[-1]/4)),mode='bilinear')
 
         if mode == 'train':
           img_noise_gaussian = torch.randn((image_embeddings.size())).cuda() * 0.2 *(image_embeddings.max()-image_embeddings.min())
           image_embeddings = (image_embeddings + img_noise_gaussian.cuda())
-        
+
         low_res_masks2, iou_predictions2, attn1 = self.mask_decoder2(
             image_embeddings=image_embeddings,
             image_pe=self.prompt_encoder.get_dense_pe(),
@@ -313,13 +313,11 @@ class Sam(nn.Module):
         padw = self.image_encoder.img_size - w
         x = F.pad(x, (0, padw, 0, padh))
         return x
-    
-        
+
         
 class Sam_OLD(nn.Module):
     mask_threshold: float = 0.0
     image_format: str = "RGB"
-
     def __init__(
         self,
         image_encoder: ImageEncoderViT,

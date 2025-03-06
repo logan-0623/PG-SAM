@@ -10,7 +10,7 @@ from icecream import ic
 
 from functools import partial
 
-from .modeling import ImageEncoderViT, PromptEncoder, Sam, TwoWayTransformer
+from .modeling import ImageEncoderViT, PromptEncoder, TwoWayTransformer
 from .modeling.sam import Sam_Encoder,Sam_OLD
 
 from .modeling.mask_decoder import MaskDecoder
