@@ -39,6 +39,8 @@ cd PG-SAM
 
 ### 2. Install the required Python packages using the requirements file:
 ```
+conda create -n PG-SAM python=3.10
+conda activate PG-SAM
 pip install -r requirements.txt
 ```
 
