@@ -49,6 +49,11 @@ pip install -r requirements.txt
 Update Soon ！！
 
 ### 4. Run the Project
+Run the DEMO
+```
+CUDA_VISIBLE_DEVICES="0" python LORA.py
+```
+
 Train the Model
 ```
 CUDA_VISIBLE_DEVICES="0" python train.py --base_lr=0.0026 --img_size=224 --warmup --AdamW --max_epochs=300 --stop_epoch=300 
