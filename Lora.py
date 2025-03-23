@@ -333,4 +333,3 @@ if __name__ == "__main__":
     low_res_logits = output['low_res_logits']
     print('output_masks', output_masks.shape)
     print('low_res_logits', low_res_logits.shape)
-    print('low_res_logits', low_res_logits)

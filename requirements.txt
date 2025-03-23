@@ -21,4 +21,3 @@ terminaltables==3.1.10
 tqdm==4.65.0
 torchvision==0.17
 torch==2.2.0
-python==3.10
