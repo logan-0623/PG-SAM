@@ -23,7 +23,7 @@ class_to_name = {1: 'spleen', 2: 'right kidney', 3: 'left kidney', 4: 'gallbladd
 def inference(args, multimask_output, db_config, model, test_save_path=None):
     print("Testing ...")
 
-    text_dir = " ... " # put your data path
+    text_dir = " ./testset/test_vol_h5/output_image_text_pairs/texts " # put your test data here
 
     db_test = Synapse_dataset(args.volume_path, args.list_dir, text_dir, split="train", data="test", transform = None)
 

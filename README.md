@@ -21,6 +21,7 @@ PG-SAM/
 ├── model_weights/         # Model weight files (managed with Git LFS)
 ├── segment_anything/      # Segmentation model and related code
 ├── tests/                 # Test scripts and unit tests
+├── lists/                 # Data Lists
 ├── train.py               # Training script
 ├── test.py                # Testing script
 ├── utils.py               # Utility functions
@@ -45,8 +46,30 @@ pip install -r requirements.txt
 ```
 
 ### 3. Data Preparation
+1. **Download Dataset**:
+   - Visit [Google Drive Dataset Link](https://drive.google.com/drive/folders/1Wu-OjKifrVth_I5VLHK6pA7IuAo4Rp2d?usp=sharing)
+   - Download these two zip files:
+     - `trainset.zip` (Training Set)
+     - `testset.zip` (Test Set)
 
-Update Soon ！！
+2. **Create Directory Structure**:
+
+like below：
+```text
+PG-SAM/
+├── datasets/     # Intermediate generated data
+├── trainset/     # Training set (unzipped contents)
+│   ├── output_image_text_pairs/   # 10% of train data
+│   ├── output_image_text_pairs_all_1/    # full train data
+│   └── train_npz_new_224/    # the original data (without text)
+├── testset/      # Test set (unzipped contents)
+│   ├── test_vol_h5/   # Test images and texts
+│   │   ├── output_image_text_pairs/    
+│   │   │   └── texts/    # Annotation files
+
+...
+```        
+
 
 ### 4. Run the Project
 Run the DEMO

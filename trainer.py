@@ -124,6 +124,7 @@ def initialize_dataloader(args):
     """
     base_dir = "./trainset/train_npz_new_224"
     list_dir = "./lists/lists_Synapse"
+
     data_type = "Big"  # This can be parameterized if needed
 
     logging.info(f'Using dataset type: {data_type}')
