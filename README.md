@@ -5,7 +5,7 @@
 
 Segment Anything Model (SAM) demonstrates powerful zero-shot capabilities, but struggles with medical image segmentation due to domain gaps. PG-SAM addresses this through **fine-grained modality alignment** using medical text priors from LLMs and a **multi-level feature fusion decoder**, achieving state-of-the-art performance on the Synapse dataset.
 
-![PG-SAM Architecture](figure2.pdf)
+![PG-SAM Architecture](figure2.png)
 
 ## Key Features
 - 🧩 **Modular Design**  
@@ -48,9 +48,10 @@ PG-SAM/
 
 ### Setup Steps
 1. **Download Data** from [Google Drive](https://drive.google.com/drive/folders/1Wu-OjKifrVth_I5VLHK6pA7IuAo4Rp2d):
-   ```bash
-   gdown "1Wu-OjKifrVth_I5VLHK6pA7IuAo4Rp2d" -O ./datasets/ --folder
-   ```
+2. Download these two zip files:
+     - `trainset.zip` (Training Set)
+     - `testset.zip` (Test Set)
+
 2. **Unzip Files**:
    ```bash
    unzip trainset.zip -d PG-SAM/trainset/
