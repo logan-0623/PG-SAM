@@ -8,14 +8,18 @@ Segment Anything Model (SAM) demonstrates powerful zero-shot capabilities, but s
 ![PG-SAM Architecture](figure2.png)
 
 ## Key Features
-- 🧩 **Modular Design**  
-  Componentized architecture for data processing, model training, and evaluation
-- 🚀 **Unprompted Learning**  
-  Integrated iterative mask optimizer for boundary refinement
-- 📦 **Large File Support**  
-  Git LFS management for model weights (>2GB)
-- 🏥 **Medical Specialization**  
-  Fine-grained alignment of radiology text reports and imaging data
+🏥 Medical Domain Expertise 
+  - Achieve precise alignment between radiology reports and imaging data through fine-grained integration.
+
+🛠 Flexible Architecture
+  - Built with modular components that seamlessly integrate data processing, training, and evaluation.
+
+🤖 Self-Optimizing Learning
+  - Employs an iterative mask optimizer that automatically refines segmentation boundaries.
+
+🩺 Domain-Specific Excellence
+  - Enhances medical image segmentation through precise alignment of radiology reports with imaging data.
+
 
 ## Installation
 ### 1. Clone Repository
@@ -106,6 +110,21 @@ CUDA_VISIBLE_DEVICES="0" python test.py \
 | `--img_size`       | 224     | Input image resolution       |
 | `--warmup`         | True    | Enable learning rate warmup  |
 | `--max_epochs`     | 300     | Total training epochs        |
+
+## Citation
+
+```
+@misc{zhong2025pgsampriorguidedsammedical,
+      title={PG-SAM: Prior-Guided SAM with Medical for Multi-organ Segmentation}, 
+      author={Yiheng Zhong and Zihong Luo and Chengzhi Liu and Feilong Tang and Zelin Peng and Ming Hu and Yingzhen Hu and Jionglong Su and Zongyuan Geand and Imran Razzak},
+      year={2025},
+      eprint={2503.18227},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2503.18227}, 
+}
+```
+
 
 ## License
 This project is licensed under the MIT License - see [LICENSE](LICENSE) for details.
