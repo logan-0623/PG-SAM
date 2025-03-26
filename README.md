@@ -4,6 +4,7 @@
 [![Python 3.10](https://img.shields.io/badge/Python-3.10%2B-green.svg)](https://www.python.org/)
 
 Segment Anything Model (SAM) demonstrates powerful zero-shot capabilities, but struggles with medical image segmentation due to domain gaps. PG-SAM addresses this through **fine-grained modality alignment** using medical text priors from LLMs and a **multi-level feature fusion decoder**, achieving state-of-the-art performance on the Synapse dataset.
+https://arxiv.org/abs/2503.18227
 
 ![PG-SAM Architecture](figure2.png)
 
